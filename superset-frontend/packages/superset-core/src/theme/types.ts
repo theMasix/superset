@@ -33,6 +33,8 @@ import { Theme } from '.';
 export type AntdTokens = ReturnType<typeof antdThemeImport.getDesignToken>;
 export type AntdThemeConfig = ThemeConfig;
 
+export type TextDirection = 'ltr' | 'rtl';
+
 /**
  * Theme algorithms supported by Antd.
  * They can be used individually or in combination.
@@ -146,6 +148,9 @@ export interface SupersetSpecificTokens {
   brandLogoMargin: string;
   brandLogoHref: string;
   brandLogoHeight: string;
+
+  // Direction-related
+  direction?: TextDirection;
 
   // Spinner-related
   brandSpinnerUrl?: string;
@@ -534,6 +539,7 @@ export interface ThemeContextType {
   themeMode: ThemeMode;
   setTheme: (config: AnyThemeConfig) => void;
   setThemeMode: (newMode: ThemeMode) => void;
+  setDirection: (newDirection: TextDirection) => void;
   resetTheme: () => void;
   setTemporaryTheme: (config: AnyThemeConfig, themeId?: number | null) => void;
   clearLocalOverrides: () => void;

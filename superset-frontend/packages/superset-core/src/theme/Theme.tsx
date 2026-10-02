@@ -20,6 +20,7 @@
 // eslint-disable-next-line no-restricted-syntax
 import React from 'react';
 import { theme as antdThemeImport, ConfigProvider } from 'antd';
+import stylisRTLPlugin from 'stylis-plugin-rtl';
 import {
   ThemeProvider,
   CacheProvider as EmotionCacheProvider,
@@ -32,10 +33,28 @@ import {
   AnyThemeConfig,
   SerializableThemeConfig,
   SupersetTheme,
+  TextDirection,
   allowedAntdTokens,
   SharedAntdTokens,
 } from './types';
 import { normalizeThemeConfig, serializeThemeConfig } from './utils';
+
+type EmotionCaches = {
+  ltr: ReturnType<typeof createCache>;
+  rtl: ReturnType<typeof createCache>;
+};
+
+function createEmotionCaches(): EmotionCaches {
+  return {
+    ltr: createCache({
+      key: 'superset-ltr',
+    }),
+    rtl: createCache({
+      key: 'superset-rtl',
+      stylisPlugins: [stylisRTLPlugin],
+    }),
+  };
+}
 
 export class Theme {
   // Forward-compat: TS 6.0 enforces strictPropertyInitialization here;
@@ -49,6 +68,8 @@ export class Theme {
   theme!: SupersetTheme;
 
   private antdConfig!: AntdThemeConfig;
+
+  private readonly emotionCaches: EmotionCaches = createEmotionCaches();
 
   private constructor({ config }: { config?: AnyThemeConfig }) {
     this.SupersetThemeProvider = this.SupersetThemeProvider.bind(this);
@@ -146,6 +167,7 @@ export class Theme {
 
     // Set the base theme properties
     this.antdConfig = antdConfig;
+    const preservedDirection = this.theme?.direction;
     this.theme = {
       ...tokens, // First apply Ant Design computed tokens
       ...antdConfig.token, // Then override with our custom tokens
@@ -154,14 +176,20 @@ export class Theme {
       ...(echartsOptionsOverridesByChartType && {
         echartsOptionsOverridesByChartType,
       }),
+      ...(preservedDirection && { direction: preservedDirection }),
     } as SupersetTheme;
 
     // Update every mounted provider with the fully formed theme
     this.notifyProviders(
       this.theme,
       this.antdConfig,
-      createCache({ key: 'superset' }),
+      this.emotionCaches,
     );
+  }
+
+  setDirection(direction: TextDirection): void {
+    this.theme = { ...this.theme, direction };
+    this.notifyProviders(this.theme, this.antdConfig, this.emotionCaches);
   }
 
   /**
@@ -259,8 +287,17 @@ export class Theme {
     const [themeState, setThemeState] = React.useState({
       theme: this.theme,
       antdConfig: this.antdConfig,
-      emotionCache: createCache({ key: 'superset' }),
+      emotionCache: this.emotionCaches,
     });
+    const { direction = 'ltr' } = themeState.theme;
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      if (typeof document !== 'undefined' && document.documentElement) {
+        document.documentElement.setAttribute('dir', direction);
+        document.documentElement.setAttribute('data-direction', direction);
+      }
+    }, [direction]);
 
     // Register (and, on unmount, deregister) this provider instance's own
     // listener rather than assigning a single shared callback on every
@@ -299,11 +336,17 @@ export class Theme {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const activeEmotionCache =
+      themeState.emotionCache?.[direction] ??
+      themeState.emotionCache?.ltr ??
+      themeState.emotionCache ??
+      this.emotionCaches[direction];
+
     return (
-      <EmotionCacheProvider value={themeState.emotionCache}>
+      <EmotionCacheProvider value={activeEmotionCache}>
         <ThemeProvider theme={themeState.theme}>
           <GlobalStyles />
-          <ConfigProvider theme={themeState.antdConfig}>
+          <ConfigProvider theme={themeState.antdConfig} direction={direction}>
             {children}
           </ConfigProvider>
         </ThemeProvider>

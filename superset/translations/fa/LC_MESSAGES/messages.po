@@ -198,7 +198,7 @@ msgstr "\"%s\" اکنون تم پیش‌فرض سیستم است"
 
 #, no-python-format
 msgid "% calculation"
-msgstr "% محاسبه"
+msgstr ""
 
 #, python-format
 msgid "% of"
@@ -218,7 +218,7 @@ msgstr ""
 
 #, no-python-format
 msgid "% of parent"
-msgstr "% از والد"
+msgstr ""
 
 #, python-format
 msgid "% of row total"
@@ -226,7 +226,7 @@ msgstr ""
 
 #, no-python-format
 msgid "% of total"
-msgstr "% از کل"
+msgstr ""
 
 #, python-format
 msgid "%(alertType)s \"%(alertName)s\" triggered successfully"
@@ -7209,13 +7209,12 @@ msgstr "تاریخ پایان از بازه زمانی مستثنی شده اس�
 msgid "End date must be after start date"
 msgstr "تاریخ پایان باید بعد از تاریخ شروع باشد."
 
-#, fuzzy
 msgid "Ends With"
-msgstr "عرض لبه"
+msgstr "پایان می‌یابد با"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Ends with (ILIKE %x)"
-msgstr "عرض لبه"
+msgstr "پایان می‌یابد با (ILIKE %x)"
 
 #, python-format
 msgid "Engine \"%(engine)s\" cannot be configured through parameters."
