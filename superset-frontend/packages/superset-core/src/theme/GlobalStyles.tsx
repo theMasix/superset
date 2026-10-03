@@ -26,6 +26,11 @@ import '@fontsource/inter/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/ibm-plex-mono/600.css';
+import '@fontsource/estedad/300.css';
+import '@fontsource/estedad/400.css';
+import '@fontsource/estedad/500.css';
+import '@fontsource/estedad/600.css';
+import '@fontsource/estedad/700.css';
 /* eslint-enable import/extensions */
 
 import { css, useTheme, Global } from '@emotion/react';
@@ -55,6 +60,15 @@ export const GlobalStyles = () => {
           -webkit-font-smoothing: antialiased;
           margin: 0;
           font-family: ${theme.fontFamily};
+        }
+
+        [dir='rtl'],
+        [data-direction='rtl'],
+        html[dir='rtl'] body,
+        html[data-direction='rtl'] body {
+          font-family: ${theme.direction === 'rtl'
+            ? theme.fontFamily
+            : `'Estedad', ${theme.fontFamily}`};
         }
 
         a {

@@ -214,6 +214,20 @@ export enum Actions {
   UPDATE = 'update',
 }
 
+export const rtlLanguages = [
+  'ar',
+  'fa',
+  'he',
+  'iw',
+  'sd',
+  'dv',
+  'ps',
+  'ug',
+  'ur',
+  'yi',
+  'ckb',
+] as const;
+
 /**
  * Default threshold for CSV streaming export.
  * Exports with row counts >= this value will use streaming with progress tracking.

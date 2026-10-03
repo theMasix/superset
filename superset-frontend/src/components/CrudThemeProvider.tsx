@@ -54,6 +54,7 @@ export default function CrudThemeProvider({
 }: CrudThemeProviderProps) {
   const themeContext = useContext(ThemeContext);
   const hasThemeConfigOverride = themeContext?.hasThemeConfigOverride ?? false;
+  const parentDirection = themeContext?.theme?.theme?.direction;
 
   const parsedTheme = useMemo(() => {
     if (hasThemeConfigOverride || !theme?.json_data) {
@@ -86,6 +87,9 @@ export default function CrudThemeProvider({
         parsedTheme.normalizedConfig,
         parsedTheme.baseTheme,
       );
+      if (parentDirection) {
+        dashboardThemeRef.current.setDirection(parentDirection);
+      }
     } catch (error) {
       logging.warn('Failed to load dashboard theme:', error);
     }
@@ -98,11 +102,14 @@ export default function CrudThemeProvider({
           parsedTheme.normalizedConfig,
           parsedTheme.baseTheme,
         );
+        if (parentDirection) {
+          dashboardThemeRef.current.setDirection(parentDirection);
+        }
       } catch (error) {
         logging.warn('Failed to load dashboard theme:', error);
       }
     }
-  }, [parsedTheme]);
+  }, [parsedTheme, parentDirection]);
 
   useEffect(() => {
     if (
