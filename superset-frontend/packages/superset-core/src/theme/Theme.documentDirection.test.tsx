@@ -38,3 +38,63 @@ test('SupersetThemeProvider sets document direction on mount', () => {
   expect(document.documentElement.getAttribute('dir')).toBe('rtl');
   expect(document.documentElement.getAttribute('data-direction')).toBe('rtl');
 });
+
+test('Theme prioritizes Estedad font in RTL mode and restores in LTR mode', () => {
+  const theme = Theme.fromConfig({
+    token: {
+      fontFamily: 'Inter, Estedad, Helvetica, Arial, sans-serif',
+    },
+  });
+
+  expect(theme.theme.fontFamily).toBe(
+    'Inter, Estedad, Helvetica, Arial, sans-serif',
+  );
+
+  theme.setDirection('rtl');
+  expect(theme.theme.fontFamily).toBe(
+    'Estedad, Inter, Helvetica, Arial, sans-serif',
+  );
+
+  theme.setDirection('ltr');
+  expect(theme.theme.fontFamily).toBe(
+    'Inter, Estedad, Helvetica, Arial, sans-serif',
+  );
+});
+
+test('Theme initializes with Estedad font when created with direction rtl', () => {
+  const theme = Theme.fromConfig({
+    direction: 'rtl',
+    token: {
+      fontFamily: 'Inter, Estedad, Helvetica, Arial, sans-serif',
+    },
+  });
+
+  expect(theme.theme.direction).toBe('rtl');
+  expect(theme.theme.fontFamily).toBe(
+    'Estedad, Inter, Helvetica, Arial, sans-serif',
+  );
+});
+
+test('Theme injects Estedad font in RTL mode when font contains Inter', () => {
+  const theme = Theme.fromConfig({
+    token: {
+      fontFamily: "'Inter', Helvetica, Arial",
+    },
+  });
+
+  theme.setDirection('rtl');
+  expect(theme.theme.fontFamily).toBe(
+    "'Estedad', 'Inter', Helvetica, Arial",
+  );
+});
+
+test('Theme preserves unrelated custom font when switching direction', () => {
+  const theme = Theme.fromConfig({
+    token: {
+      fontFamily: 'CustomFont, sans-serif',
+    },
+  });
+
+  theme.setDirection('rtl');
+  expect(theme.theme.fontFamily).toBe('CustomFont, sans-serif');
+});

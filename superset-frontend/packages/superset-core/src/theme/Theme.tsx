@@ -44,6 +44,45 @@ type EmotionCaches = {
   rtl: ReturnType<typeof createCache>;
 };
 
+export function getFontFamilyForDirection(
+  fontFamily: string | undefined,
+  direction: TextDirection = 'ltr',
+): string | undefined {
+  if (!fontFamily) return fontFamily;
+
+  const fontList = fontFamily
+    .split(',')
+    .map(f => f.trim())
+    .filter(Boolean);
+
+  const cleanNames = fontList.map(f => f.replace(/^['"]|['"]$/g, ''));
+  const estedadIdx = cleanNames.findIndex(
+    name => name.toLowerCase() === 'estedad',
+  );
+  const interIdx = cleanNames.findIndex(name => name.toLowerCase() === 'inter');
+
+  if (direction === 'rtl') {
+    if (estedadIdx > 0) {
+      const [estedadFont] = fontList.splice(estedadIdx, 1);
+      fontList.unshift(estedadFont);
+      return fontList.join(', ');
+    }
+    if (estedadIdx === -1 && interIdx !== -1) {
+      return `'Estedad', ${fontFamily}`;
+    }
+    return fontFamily;
+  }
+
+  // LTR
+  if (estedadIdx !== -1 && interIdx !== -1 && estedadIdx < interIdx) {
+    const [interFont] = fontList.splice(interIdx, 1);
+    fontList.splice(estedadIdx, 0, interFont);
+    return fontList.join(', ');
+  }
+
+  return fontFamily;
+}
+
 function createEmotionCaches(): EmotionCaches {
   return {
     ltr: createCache({
@@ -168,6 +207,29 @@ export class Theme {
     // Set the base theme properties
     this.antdConfig = antdConfig;
     const preservedDirection = this.theme?.direction;
+    const direction: TextDirection =
+      preservedDirection ||
+      (mergedConfig as { direction?: TextDirection })?.direction ||
+      'ltr';
+
+    let resolvedFontFamily: string | undefined =
+      antdConfig.token?.fontFamily ?? tokens.fontFamily;
+    if (direction === 'rtl' && resolvedFontFamily) {
+      const rtlFontFamily = getFontFamilyForDirection(resolvedFontFamily, 'rtl');
+      if (rtlFontFamily && rtlFontFamily !== resolvedFontFamily) {
+        resolvedFontFamily = rtlFontFamily;
+        if (this.antdConfig.token) {
+          this.antdConfig = {
+            ...this.antdConfig,
+            token: {
+              ...this.antdConfig.token,
+              fontFamily: rtlFontFamily,
+            },
+          };
+        }
+      }
+    }
+
     this.theme = {
       ...tokens, // First apply Ant Design computed tokens
       ...antdConfig.token, // Then override with our custom tokens
@@ -176,7 +238,8 @@ export class Theme {
       ...(echartsOptionsOverridesByChartType && {
         echartsOptionsOverridesByChartType,
       }),
-      ...(preservedDirection && { direction: preservedDirection }),
+      direction,
+      ...(resolvedFontFamily && { fontFamily: resolvedFontFamily }),
     } as SupersetTheme;
 
     // Update every mounted provider with the fully formed theme
@@ -188,7 +251,27 @@ export class Theme {
   }
 
   setDirection(direction: TextDirection): void {
-    this.theme = { ...this.theme, direction };
+    let resolvedFontFamily = this.theme.fontFamily;
+    const nextFont = getFontFamilyForDirection(resolvedFontFamily, direction);
+
+    if (nextFont && nextFont !== resolvedFontFamily) {
+      resolvedFontFamily = nextFont;
+      if (this.antdConfig.token) {
+        this.antdConfig = {
+          ...this.antdConfig,
+          token: {
+            ...this.antdConfig.token,
+            fontFamily: resolvedFontFamily,
+          },
+        };
+      }
+    }
+
+    this.theme = {
+      ...this.theme,
+      direction,
+      ...(resolvedFontFamily && { fontFamily: resolvedFontFamily }),
+    };
     this.notifyProviders(this.theme, this.antdConfig, this.emotionCaches);
   }
 
